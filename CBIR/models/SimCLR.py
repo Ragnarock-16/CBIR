@@ -53,7 +53,7 @@ class NTXentLoss(nn.Module):
         negatives = similarity_matrix[~labels.bool()].view(similarity_matrix.shape[0], -1)
 
         logits = torch.cat([positives, negatives], dim=1)
-        labels = torch.zeros(logits.shape[0], dtype=torch.long).to(device)
+        labels = torch.zeros(logits.shape[0], dtype=torch.long).to(self.device)
 
         logits = logits / self.temperature
         return logits, labels
