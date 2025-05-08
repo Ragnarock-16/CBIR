@@ -7,6 +7,7 @@ import torchvision.transforms.functional as TF
 from torch.utils.data import random_split
 from models.SimCLR import SimCLR, NTXentLoss
 from tqdm import tqdm
+import utils.dataset_cleaning
 
 simclr_transform = transforms.Compose([
     transforms.RandomResizedCrop(224),
@@ -23,7 +24,7 @@ basic_transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
-
+# TODO change the path of your data set here
 IMG_PATH = '/Volumes/U1/Fac/M2/HighVision_Corpus_Groundtruth/historicaldataset'
 dataset = SimCLRDataset(IMG_PATH, basic_transform , simclr_transform)
 
@@ -36,12 +37,12 @@ train_set, val_set, test_set = random_split(dataset, [train_size, val_size, test
 
 
 # Parameters zone
-batch_size = 4
-train_loader = DataLoader(train_set, batch_size, shuffle=True)
-val_loader = DataLoader(val_set, batch_size, shuffle=True)
-test_loader = DataLoader(test_set, batch_size, shuffle=True)
+batch_size = 32
+train_loader = DataLoader(train_set, batch_size, shuffle=True,num_workers=2)
+val_loader = DataLoader(val_set, batch_size, shuffle=True,num_workers=2)
+test_loader = DataLoader(test_set, batch_size, shuffle=True,num_workers=2)
 backbone = models.resnet50(pretrained = True)
-epoch = 2
+epoch = 5
 
 
 model = SimCLR(backbone)
@@ -51,7 +52,7 @@ device = torch.device('mps' if torch.mps.is_available else 'cpu')
 print('Using: ',  device)
 
 model = model.to(device)
-ntxent = NTXentLoss(device,batch_size)
+ntxent = NTXentLoss(device)
 criterion = torch.nn.CrossEntropyLoss().to(device)
 
 

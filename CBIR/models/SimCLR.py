@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torchvision import models
 
 class SimCLR(nn.Module):
-    def __init__(self, base_encoder, projection_dim = 128):
+    def __init__(self, base_encoder, projection_dim = 64):
         super(SimCLR,self).__init__()
         
         self.encoder = base_encoder
@@ -24,14 +24,14 @@ class SimCLR(nn.Module):
         return h,z
     
 class NTXentLoss(nn.Module):
-    def __init__(self, device, batch_size, temperature = 0.5):
+    def __init__(self, device, temperature = 0.5):
         super(NTXentLoss, self).__init__()
         self.temperature = temperature
         self.device = device
-        self.batch_size = batch_size
    
     def forward(self, z_i,z_j):
-        labels = torch.cat([torch.arange(self.batch_size) for i in range(2)], dim=0)
+        batch_size = z_i.shape[0]
+        labels = torch.cat([torch.arange(batch_size) for i in range(2)], dim=0)
         labels = (labels.unsqueeze(0) == labels.unsqueeze(1)).float()
         labels = labels.to(self.device)
 
