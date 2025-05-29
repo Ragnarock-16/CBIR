@@ -3,10 +3,10 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-from PIL import UnidentifiedImageError
+
 
 class SimCLRDataset(Dataset):
-    def __init__(self, root_dir, base_transform, transform, bad_list_file="/Users/nour/Desktop/MSV/corrupted_images.txt"):
+    def __init__(self, root_dir, base_transform, transform, bad_list_file):
         self.root_dir = root_dir
         self.base_transform = base_transform
         self.transform = transform
@@ -30,12 +30,26 @@ class SimCLRDataset(Dataset):
 
     def __getitem__(self, idx):
         path = self.image_paths[idx]
-        try:
-            img = Image.open(path).convert('RGB')
-            return self.base_transform(img), self.transform(img)
-        except:
-            print(f"Warning: Skipping corrupted image: {path}")
-            return self.__getitem__((idx + 1) % len(self))
-        
+        img = Image.open(path).convert('RGB')
+        return self.base_transform(img), self.transform(img)
+    
     def __len__(self):
         return len(self.image_paths)
+
+class CBIRImageDataset(Dataset):
+    def __init__(self, image_paths, transform=None):
+        self.image_paths = image_paths
+        self.transform = transform or transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+        ])
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        path = self.image_paths[idx]
+        image = Image.open(path).convert('RGB')
+        return self.transform(image), path
