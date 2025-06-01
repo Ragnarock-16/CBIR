@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 from models.SimCLR import SimCLR
 from tqdm import tqdm
 from pytorch_metric_learning.losses import SelfSupervisedLoss, NTXentLoss 
-from dataset.augment import basic_transform, simclr_transform
+from dataset.augment import Augmentation
+from utils.utils import get_new_run_folder
 
 parser = argparse.ArgumentParser(description = "CBIR implementation using SimCLR")
 
@@ -20,25 +21,23 @@ parser.add_argument('-c', '--corrupted_path', help='Path to corrupted file', typ
 parser.add_argument('-b', '--batch', help='Batch size', type=int, default=32)
 parser.add_argument('-e', '--epoch', help='Number of epochs', type=int, default=20)
 
-
-def get_new_run_folder(base_dir="runs"):
-    os.makedirs(base_dir, exist_ok=True)
-    existing = [d for d in os.listdir(base_dir) if d.startswith("run_")]
-    run_ids = [int(d.split("_")[1]) for d in existing if d.split("_")[1].isdigit()]
-    next_id = max(run_ids, default=0) + 1
-    run_folder = os.path.join(base_dir, f"run_{next_id}")
-    os.makedirs(run_folder)
-    return run_folder
-
-
 def main(img_path, corrupted_path, batch_size, epoch):
+    print(batch_size, epoch)
+   
+    mean = [0.5573, 0.5598, 0.5478]
+    std = [0.2112, 0.2071, 0.2058]
+
     run_dir = get_new_run_folder()
-    dataset = SimCLRDataset(img_path, basic_transform(224), simclr_transform(224), corrupted_path)
+    transformations = Augmentation(mean, std, 224)
+    dataset = SimCLRDataset(img_path, transformations, corrupted_path)
 
     dataset_size = len(dataset)
-    train_size = int(0.8 * dataset_size)
-    val_size = dataset_size - train_size
-    train_set, val_set = random_split(dataset, [train_size, val_size])
+    half_size = int(1 * dataset_size)
+    reduced_dataset, _ = random_split(dataset, [half_size, dataset_size - half_size])
+
+    train_size = int(0.8 * half_size)
+    val_size = half_size - train_size
+    train_set, val_set = random_split(reduced_dataset, [train_size, val_size])
 
     print(f"Train size: {len(train_set)}")
     print(f"Validation size: {len(val_set)}")
@@ -47,10 +46,8 @@ def main(img_path, corrupted_path, batch_size, epoch):
     val_loader = DataLoader(val_set, batch_size, shuffle=True, num_workers=2)
     backbone = models.resnet50(pretrained=True)
 
-    # Load one batch
     v1_batch, v2_batch = next(iter(train_loader))
 
-    # Convert to CPU tensors for visualization (if needed)
     v1_batch = v1_batch.cpu()
     v2_batch = v2_batch.cpu()
 
@@ -62,7 +59,7 @@ def main(img_path, corrupted_path, batch_size, epoch):
     print('Using: ',  device)
 
     model = model.to(device)
-    base_loss =  NTXentLoss()
+    base_loss =  NTXentLoss(temperature=0.5)
     loss_func = SelfSupervisedLoss(base_loss)
 
     #Training

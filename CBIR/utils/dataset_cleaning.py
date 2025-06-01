@@ -1,6 +1,7 @@
 import os
 from PIL import Image, UnidentifiedImageError
 import pandas as pd
+import argparse
 
 def get_cbir_filename(cbir_gt_file):
     df = pd.read_excel(cbir_gt_file, header=None)
@@ -40,6 +41,10 @@ def find_discarded_images(image_dir,excel_dir, log_file="corrupted_images.txt"):
     return discard
 
 if __name__ == "__main__":
-    image_directory = '/Users/nour/Desktop/historicaldataset'
-    excel_dir = '/Users/nour/Desktop/groundtruth.xlsx'
-    find_discarded_images(image_directory,excel_dir)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--image_dir', type=str, required=True, help="Path to image directory")
+    parser.add_argument('-gt', '--ground_truth_path', type=str, required=True, help="Path to GT file")
+   
+    args = parser.parse_args()
+
+    find_discarded_images(args.image_dir,args.ground_truth_path)
