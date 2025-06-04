@@ -7,11 +7,10 @@ def get_cbir_filename(cbir_gt_file):
     df = pd.read_excel(cbir_gt_file, header=None)
     filenames = []
 
-    # Iterate through all cells and collect non-null, cleaned filenames
     for row in df.itertuples(index=False):
         for cell in row:
             if pd.notnull(cell):
-                filename = str(cell).strip().lower().split('.')[0]  # remove extension
+                filename = str(cell).strip().lower().split('.')[0]
                 filenames.append(filename)
     return filenames
 

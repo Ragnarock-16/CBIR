@@ -52,7 +52,7 @@ def main(img_path, corrupted_path, batch_size, epoch):
     v2_batch = v2_batch.cpu()
 
     model = SimCLR(backbone)
-    optimizer = torch.optim.AdamW(model.parameters(),lr=0.01)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.01)
     scheduler = CosineAnnealingLR(optimizer, T_max=epoch, eta_min=1e-5)
 
     device = torch.device('mps' if torch.mps.is_available() else 'cpu')
