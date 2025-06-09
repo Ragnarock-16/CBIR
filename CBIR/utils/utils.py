@@ -8,3 +8,8 @@ def get_new_run_folder(base_dir="runs"):
     run_folder = os.path.join(base_dir, f"run_{next_id}")
     os.makedirs(run_folder)
     return run_folder
+
+def parse_model(model):
+    if model.strip().lower() not in ['simclr', 'dino']:
+        return True
+    return False

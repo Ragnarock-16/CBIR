@@ -9,19 +9,22 @@ from torch.utils.data import random_split
 from torch.optim.lr_scheduler import CosineAnnealingLR
 import matplotlib.pyplot as plt
 from models.SimCLR import SimCLR
+from models.FineTunedDino import FineTunedDino
 from tqdm import tqdm
 from pytorch_metric_learning.losses import SelfSupervisedLoss, NTXentLoss 
 from dataset.augment import Augmentation
 from utils.utils import get_new_run_folder
-
+import utils.utils as utils
 parser = argparse.ArgumentParser(description = "CBIR implementation using SimCLR")
 
 parser.add_argument('-i', '--img_path', help='Path to image dataset', type=str, required=True)
 parser.add_argument('-c', '--corrupted_path', help='Path to corrupted file', type=str, required=True)
 parser.add_argument('-b', '--batch', help='Batch size', type=int, default=32)
 parser.add_argument('-e', '--epoch', help='Number of epochs', type=int, default=20)
+parser.add_argument('-lr','--learning_rate', help="Learning rate",type=float,default=0.01)
+parser.add_argument('-m','--model', help="SimCLR or DINO",type=str, default="SimCLR")
 
-def main(img_path, corrupted_path, batch_size, epoch):
+def main(img_path, corrupted_path, batch_size, epoch, lr, model):
     print(batch_size, epoch)
    
     mean = [0.5573, 0.5598, 0.5478]
@@ -32,12 +35,10 @@ def main(img_path, corrupted_path, batch_size, epoch):
     dataset = SimCLRDataset(img_path, transformations, corrupted_path)
 
     dataset_size = len(dataset)
-    half_size = int(1 * dataset_size)
-    reduced_dataset, _ = random_split(dataset, [half_size, dataset_size - half_size])
 
-    train_size = int(0.8 * half_size)
-    val_size = half_size - train_size
-    train_set, val_set = random_split(reduced_dataset, [train_size, val_size])
+    train_size = int(0.8 * dataset_size)
+    val_size = dataset_size - train_size
+    train_set, val_set = random_split(dataset, [train_size, val_size])
 
     print(f"Train size: {len(train_set)}")
     print(f"Validation size: {len(val_set)}")
@@ -46,13 +47,12 @@ def main(img_path, corrupted_path, batch_size, epoch):
     val_loader = DataLoader(val_set, batch_size, shuffle=True, num_workers=2)
     backbone = models.resnet50(pretrained=True)
 
-    v1_batch, v2_batch = next(iter(train_loader))
+    if(model == "Dino"):
+        model = FineTunedDino()
+    else:
+        model = SimCLR(backbone)
 
-    v1_batch = v1_batch.cpu()
-    v2_batch = v2_batch.cpu()
-
-    model = SimCLR(backbone)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.01)
+    optimizer = torch.optim.AdamW(model.parameters(), lr)
     scheduler = CosineAnnealingLR(optimizer, T_max=epoch, eta_min=1e-5)
 
     device = torch.device('mps' if torch.mps.is_available() else 'cpu')
@@ -123,5 +123,9 @@ def main(img_path, corrupted_path, batch_size, epoch):
 if __name__ == '__main__':
     multiprocessing.set_start_method('spawn', force=True)
     args = parser.parse_args()
+    model = args.model
 
-    main(args.img_path, args.corrupted_path, args.batch, args.epoch)
+    if utils.parse_model(model):
+        print("ERROR: Model must be Dino or SimCLR")
+    else:
+        main(args.img_path, args.corrupted_path, args.batch, args.epoch, args.learning_rate, model)

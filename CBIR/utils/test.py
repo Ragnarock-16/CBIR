@@ -3,6 +3,7 @@ import os
 import json
 import pandas as pd
 from models.SimCLR import SimCLR
+from models.FineTunedDino import FineTunedDino
 from dataset import data
 from torch.utils.data import DataLoader
 from torchvision.models import resnet50
@@ -65,9 +66,15 @@ def load_groundtruth(gt_path):
 backbone = resnet50(pretrained=False)
 model = SimCLR(backbone)
 
+#model = FineTunedDino()
 
-checkpoint = torch.load('/Users/nour/Desktop/MSV/CBIR/runs/run_4/simclr_model_epoch_20.pth', map_location='mps')
-model.load_state_dict(checkpoint)
+checkpoint = torch.load('/Users/nour/Desktop/MSV/CBIR/runs/run_6/simclr_model_epoch_20.pth', map_location='mps')
+
+# Strip 'module.' prefix from keys
+state_dict = {k.replace('module.', ''): v for k, v in checkpoint.items()}
+model.load_state_dict(state_dict)
+
+#model.load_state_dict(checkpoint)
 
 model.eval()
 
