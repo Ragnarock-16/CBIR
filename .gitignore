@@ -3,4 +3,5 @@ main.ipynb
 parse_groundtruth.py
 __pycache__
 *.txt
-runs
+*.md
+
