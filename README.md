@@ -45,7 +45,11 @@ We implemented and compared two augmentation strategies:
 
 2. **Domain-Informed Augmentation Strategy :**  
    This strategy is tailored to the specific nature of our dataset (historical photographs). It includes augmentations chosen to preserve domain-relevant features and avoid distortions that could alter important details.
-   
+
+<p align="center">
+  <img src="assets/fig1.png"/>
+</p>
+
 
 ## Results
 

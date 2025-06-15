@@ -4,4 +4,5 @@ parse_groundtruth.py
 __pycache__
 *.txt
 *.md
+*.pth
 
