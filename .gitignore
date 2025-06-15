@@ -2,7 +2,7 @@
 main.ipynb
 parse_groundtruth.py
 __pycache__
-*.txt
+corrupted_images.txt
 *.md
 *.pth
 
