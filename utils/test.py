@@ -37,7 +37,7 @@ def extract_features_and_build_index(model, image_paths, batch_size=32):
             image_names.extend(batch_path)
 
     features = torch.cat(representation, dim=0).numpy().astype('float32')
-    features = normalize(features, axis=1)  # Normalize for cosine similarity
+    features = normalize(features, axis=1)
 
     dimension = features.shape[1]
     index = faiss.IndexFlatIP(dimension)
@@ -57,13 +57,22 @@ def normalize_path(image_names):
 def load_groundtruth(gt_path):
     df = pd.read_excel(gt_path, header=None)
     groups = []
+    nb_img = 0
     for row in df.itertuples(index=False):
         current_groups = []
         for cell in row:
             if pd.notnull(cell):
                 filename = str(cell).strip().lower().split('.')[0]
                 current_groups.append(filename)
+                nb_img+=1
         groups.append(current_groups)
+    
+    nb_groups = len(groups)
+    avg_imgs_per_group = nb_img / nb_groups if nb_groups > 0 else 0
+    
+    print("nb groups:", len(groups))
+    print('nb images test:', nb_img)
+    print('avg', avg_imgs_per_group)
     return groups
 
 def evaluate_faiss(img_path, ground_truth_path, model='resnet50', checkpoint_path='', save=False, dim=64):

@@ -4,6 +4,37 @@
 
 This project aims to develop a visual representation learning model for Content-Based Image Retrieval (CBIR), specifically targeting the retrieval of near-duplicate images. The application domain focuses on a heritage dataset of historical photographs.
 
+
+## Installation
+
+1. **Set up the environment**
+
+```bash
+git clone https://github.com/Ragnarock-16/CBIR.git
+cd <repo-directory>
+pip install -r requirements.txt
+```
+
+2. **Clean up the dataset**
+
+```bash
+python3 -m utils.dataset_cleaning -i <image_path> -gt <ground_truth_path>
+```
+
+This will generate a `.txt` file with the absolute paths of the corrupted images.
+
+3. **Training**
+
+```bash
+python3 -m train -i <image_path> -gt <ground_truth_path> -b <batch_sz> -e <num_epoch> -lr <learning_rate> -m <simclr or dino>
+```
+
+4. **Testing**
+
+```bash
+python3 -m utils.test -ip <img_pth> --gt <gt_path> --model <'simclr' or 'dino'> -chk <model_weight_path>
+```
+
 ## Objective
 
 Implement and adapt a state-of-the-art self-supervised learning method based on SimCLR to learn effective image embeddings for similarity search in the targeted domain.
@@ -50,6 +81,20 @@ We implemented and compared two augmentation strategies:
   <img src="assets/fig1.png"/>
 </p>
 
+## Indexation
+
+We explored two main approaches for retrieving similar images using embeddings:
+
+1. **K-Nearest Neighbors (KNN):**
+   - Computes distances between all embeddings to find the closest matches.(see @K metrics)
+   - Simple and effective for small datasets but not scalable.
+
+2. **Facebook AI Similarity Search (FAISS):**
+   - Builds an efficient index to organize embeddings for fast retrieval.
+   - Highly scalable and much faster than brute-force KNN (up to 10× speedup).
+   - Flexible, supporting large datasets and approximate search.
+
+It's preferable to use **FAISS** due to its speed, scalability, and efficiency in handling large-scale image embeddings.
 
 ## Results
 
@@ -66,10 +111,27 @@ The retrieval performance and training parameters for different models on the ne
 | run3   | 128        | 0.001         | 128            | 0.5         | Custom       | 0.446       | 0.1275   | 0.2345      | 0.2953   | 0.2352 | 0.1745       | 0.4146    | 0.2264 | 0.2411 | 0.2791 |
 | run4   | 32         | 0.01          | 64             | 0.5         | SimCLR        | 0.0719      | 0.0142   | 0.0446      | 0.0507   | 0.0432 | 0.0324       | 0.0781    | 0.0417 | 0.0297 | 0.0349 |
 
+## Configuration
 
-## Installation
+- **Encoder:** ResNet50  
+- **Learning Rate:** 1e-3  
+- **Epochs:** 20  
+- **Optimizer:** AdamW  
+- **Temperature:** 0.5  
+- **Training Time:** ~10 hours on 2xT4
 
-```bash
-git clone <repo-url>
-cd <repo-directory>
-pip install -r requirements.txt
+---
+
+## Conclusion
+
+- Contrastive learning is well-suited to the task.  
+- Limitations due to high resource consumption.  
+- Importance of data augmentation.  
+- More promising results with DINO.
+
+---
+
+## Supervisors and Contributors
+
+- **Supervisor:** Camille KURTZ  
+- **Other contributors:** Dorian GROUTEAU and Samuel GONÇALVES (same task other approach).
